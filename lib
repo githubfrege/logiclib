@@ -1,0 +1,177 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace logiclib
+{
+    public static class TruthTables
+    {
+        public static List<string> OperandValueCombinations = new List<string>();
+        public static void GenerateTruthTable(Statement statement)
+        {
+
+        }
+    }
+    public class Statement
+    {
+        public static Dictionary<string, int> Precedence = new Dictionary<string, int>() { ["¬"] = 4, ["&"] = 3, ["|"] = 2, ["->"] = 1, ["<->"] = 1 };
+        public List<string> Tokens;
+        public List<string> RPN;
+        public Statement(string str)
+        {
+            List<string> tokens = new List<string>();
+            foreach (char c in str)
+            {
+                if (Char.IsLetter(c) || Precedence.ContainsKey(c.ToString()))
+                {
+                    tokens.Add(c.ToString());
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case '!':
+                            tokens.Add("¬");
+                            break;
+                        case '>':
+                            tokens.Add("->");
+                            break;
+                        case '=':
+                            tokens.Add("<->");
+                            break;
+                        default:
+                            Console.WriteLine("your statement was invalid");
+                            return;
+                    }
+                }
+            }
+            try
+            {
+                Tokens = tokens;
+                RPN = GetRPN();
+                if (!isValidRPN())
+                {
+                    Console.WriteLine("your statement was invalid");
+                    return;
+                }
+            }
+            catch
+            {
+                Console.WriteLine("your statement was invalid");
+            }
+            
+        }
+        public List<string> GetRPN()
+        {
+            List<string> output = new List<string>();
+            Stack<string> operators = new Stack<string>();
+            foreach (string token in Tokens)
+            {
+                if (!Precedence.ContainsKey(token) && token != "(" && token != ")")
+                {
+                    output.Add(token);
+                }
+                else
+                {
+                    if (token == "(")
+                    {
+                        operators.Push(token);
+                    }
+                    else if (token == ")")
+                    {
+                        while (operators.Count > 0)
+                        {
+                            string stackOperator = operators.Pop();
+                            if (stackOperator == "(")
+                            {
+                                break;
+                            }
+                            output.Add(stackOperator);
+                        }
+                    }
+                    else
+                    {
+                        while (operators.Count > 0)
+                        {
+                            string stackOperator = operators.Peek();
+                            if (stackOperator == "(")
+                            {
+                                break;
+                            }
+                            if (Precedence[stackOperator] > Precedence[token])
+                            {
+                                output.Add(operators.Pop());
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        operators.Push(token);
+                    }
+
+
+
+                }
+
+            }
+            foreach (string op in operators)
+            {
+                output.Add(op);
+            }
+
+            foreach (string s in output)
+            {
+                Debug.WriteLine(s);
+            }
+            return output;
+
+
+        }
+        private static bool decrease(ref int counter, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                counter--;
+                if (counter < 0)
+                {
+                    return false;
+                }
+            }
+            return true;
+
+        }
+
+        private bool isValidRPN()
+        {
+
+            int counter = 0;
+            foreach (string token in RPN)
+            {
+                if (Regex.IsMatch(token, @"^[a-zA-Z]+$"))
+                {
+                    counter++;
+                }
+                else if (Precedence.ContainsKey(token) && token != "¬")
+                {
+                    if (!decrease(ref counter, 2))
+                    {
+                        return false;
+                    }
+                    counter++;
+                }
+                else if (token == "¬")
+                {
+                    if (!decrease(ref counter, 1))
+                    {
+                        return false;
+                    }
+                    counter++;
+                }
+            }
+            return (counter == 1);
+        }
+    }
+}
