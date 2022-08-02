@@ -92,9 +92,9 @@ namespace logiclib
     public class Statement
     {
         private static Dictionary<string, int> _precedence = new Dictionary<string, int>() { ["¬"] = 4, ["&"] = 3, ["|"] = 2, ["->"] = 1, ["<->"] = 1 };
-        private List<string> _tokens;
+        public List<string> Tokens;
         public List<string> RPN;
-        private bool _statementInvalid = false;
+        public bool StatementInvalid = false;
         public Statement(string str)
         {
             List<string> tokens = new List<string>();
@@ -118,18 +118,18 @@ namespace logiclib
                             tokens.Add("<->");
                             break;
                         default:
-                            Console.WriteLine("your statement was invalid");
+                            StatementInvalid = true;
                             return;
                     }
                 }
             }
             
-           _tokens = tokens;
+           Tokens = tokens;
            RPN = getRPN();
           if (!isValidRPN())
           {
-            Console.WriteLine("your statement was invalid");
-           return;
+                StatementInvalid = true;
+                return;
           }
           
             
@@ -138,7 +138,7 @@ namespace logiclib
         {
             List<string> output = new List<string>();
             Stack<string> operators = new Stack<string>();
-            foreach (string token in _tokens)
+            foreach (string token in Tokens)
             {
                 if (!_precedence.ContainsKey(token) && token != "(" && token != ")")
                 {
@@ -264,16 +264,13 @@ namespace logiclib
                         myDict.Add(variable, true);
                         break;
                     case "f":
-                        myDict.Add(variable, true);
+                        myDict.Add(variable, false);
                         break;
                 }
             }
             if (GetValue(myDict) == trueOrFalse)
             {
-                if (_statementInvalid)
-                {
-                    Console.WriteLine("statement was invalid");
-                }
+                
                 return true;
             }
             return false;
@@ -325,7 +322,7 @@ namespace logiclib
                     }
                     catch (InvalidOperationException)
                     {
-                        _statementInvalid = true;
+                        StatementInvalid = true;
                         return false;
                     }
 
